@@ -16,10 +16,24 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Experiment Data Logger',
-        short_name: 'ExpLogger',
+        name: 'DTF 탑 실험',
+        short_name: 'DTF 탑 실험',
         description: 'Log and evaluate experimental data on the field.',
-        theme_color: '#ffffff'
+        theme_color: '#ffffff',
+        icons: [
+          {
+            src: 'pwa-192x192.svg',
+            sizes: '192x192',
+            type: 'image/svg+xml',
+            purpose: 'any maskable'
+          },
+          {
+            src: 'pwa-512x512.svg',
+            sizes: '512x512',
+            type: 'image/svg+xml',
+            purpose: 'any maskable'
+          }
+        ]
       }
     })
   ],
