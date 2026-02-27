@@ -8,10 +8,7 @@ export default defineConfig({
   base: '/',
   build: {
     outDir: 'dist',
-    emptyOutDir: true,
-    rollupOptions: {
-      input: 'index.html'
-    }
+    emptyOutDir: true
   },
   plugins: [
     react(),
@@ -22,19 +19,7 @@ export default defineConfig({
         name: 'Experiment Data Logger',
         short_name: 'ExpLogger',
         description: 'Log and evaluate experimental data on the field.',
-        theme_color: '#ffffff',
-        icons: [
-          {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          }
-        ]
+        theme_color: '#ffffff'
       }
     })
   ],
