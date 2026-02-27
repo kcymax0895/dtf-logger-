@@ -18,13 +18,13 @@ export default function ExperimentForm() {
     const defaultRecipeRow = { materialName: '', amount: '', ratio: '' };
 
     const [formData, setFormData] = useState({
-        recipe: [{ ...defaultRecipeRow }],
+        matteRecipe: [{ ...defaultRecipeRow }],
+        topRecipe: [{ ...defaultRecipeRow }],
         matteLayer: {
             batchId: '',
             layerBar: '',
             matteType: '',
             dryCondition: '',
-            shakerCondition: '',
             coatingAmount: '',
             coatingAppearance: '○',
             slipCondition: '○',
@@ -32,8 +32,9 @@ export default function ExperimentForm() {
             stain: '無',
             burr: '無',
             powderShedding: '',
-            peelForce: '',
-            absorbency: '',
+            peelForceMin: '',
+            peelForceMax: '',
+            peelForceAvg: '',
             gloss20: '',
             gloss60: '',
             gloss85: ''
@@ -41,6 +42,7 @@ export default function ExperimentForm() {
         topLayer: {
             batchId: '',
             iccCondition: '',
+            shakerCondition: '',
             transferTemp: '',
             transferTime: '',
             transferPressure: '',
@@ -59,7 +61,8 @@ export default function ExperimentForm() {
         photos: []
     });
 
-    const handleRecipeChange = (newRecipe) => setFormData(prev => ({ ...prev, recipe: newRecipe }));
+    const handleMatteRecipeChange = (newRecipe) => setFormData(prev => ({ ...prev, matteRecipe: newRecipe }));
+    const handleTopRecipeChange = (newRecipe) => setFormData(prev => ({ ...prev, topRecipe: newRecipe }));
 
     const handleMatteChange = (field, value) => {
         setFormData(prev => ({ ...prev, matteLayer: { ...prev.matteLayer, [field]: value } }));
@@ -79,7 +82,8 @@ export default function ExperimentForm() {
     const handleCloneSelect = (selectedExp) => {
         setFormData(prev => ({
             ...prev,
-            recipe: selectedExp.recipe || [{ ...defaultRecipeRow }]
+            matteRecipe: selectedExp.matteRecipe || selectedExp.recipe || [{ ...defaultRecipeRow }],
+            topRecipe: selectedExp.topRecipe || [{ ...defaultRecipeRow }],
         }));
         setCloneModalOpen(false);
     };
@@ -122,13 +126,19 @@ export default function ExperimentForm() {
             />
 
             <div className="px-4">
-                {/* 1. Recipe Section (Single Table) */}
+                {/* 1. Two separate recipe tables */}
                 <div className="space-y-4 mb-6">
                     <DynamicRecipeTable
-                        title="🧪 공통 배합비 (최대 20행)"
-                        recipe={formData.recipe}
-                        onChange={handleRecipeChange}
-                        colorTheme="primary"
+                        title="🔵 무광(이형층) 배합비"
+                        recipe={formData.matteRecipe}
+                        onChange={handleMatteRecipeChange}
+                        colorTheme="blue"
+                    />
+                    <DynamicRecipeTable
+                        title="🟠 TOP(수용층) 배합비"
+                        recipe={formData.topRecipe}
+                        onChange={handleTopRecipeChange}
+                        colorTheme="orange"
                     />
                 </div>
 
@@ -166,9 +176,6 @@ export default function ExperimentForm() {
                             <label className={labelClass}>DRY 조건</label>
                             <input type="text" value={formData.matteLayer.dryCondition} onChange={(e) => handleMatteChange('dryCondition', e.target.value)} className={inputClass} placeholder="조건 입력" />
 
-                            <label className={labelClass}>쉐이커 조건</label>
-                            <input type="text" value={formData.matteLayer.shakerCondition} onChange={(e) => handleMatteChange('shakerCondition', e.target.value)} className={inputClass} placeholder="조건 입력" />
-
                             <label className={labelClass}>도포량 (g/m²)</label>
                             <input type="number" step="0.1" value={formData.matteLayer.coatingAmount} onChange={(e) => handleMatteChange('coatingAmount', e.target.value)} className={inputClass} placeholder="단위: g/m²" />
 
@@ -181,10 +188,23 @@ export default function ExperimentForm() {
 
                             <label className={labelClass}>파우더 털림 (0~1.0)</label>
                             <input type="number" step="0.1" min="0" max="1" value={formData.matteLayer.powderShedding} onChange={(e) => handleMatteChange('powderShedding', e.target.value)} className={inputClass} placeholder="0 ~ 1.0" />
-                            <label className={labelClass}>박리력 (0~1.0)</label>
-                            <input type="number" step="0.1" min="0" max="1" value={formData.matteLayer.peelForce} onChange={(e) => handleMatteChange('peelForce', e.target.value)} className={inputClass} placeholder="0 ~ 1.0" />
-                            <label className={labelClass}>흡수성 (0~1.0)</label>
-                            <input type="number" step="0.1" min="0" max="1" value={formData.matteLayer.absorbency} onChange={(e) => handleMatteChange('absorbency', e.target.value)} className={inputClass} placeholder="0 ~ 1.0" />
+
+                            {/* 박리력 → Min / Max / Avg */}
+                            <label className={labelClass}>박리력 (Min / Max / Avg)</label>
+                            <div className="grid grid-cols-3 gap-2 mb-4">
+                                <div>
+                                    <input type="number" step="0.01" value={formData.matteLayer.peelForceMin} onChange={(e) => handleMatteChange('peelForceMin', e.target.value)} className={`${inputClass} !mb-1 text-center`} placeholder="Min" />
+                                    <span className="block text-[10px] sm:text-xs text-center font-bold text-gray-400">Min</span>
+                                </div>
+                                <div>
+                                    <input type="number" step="0.01" value={formData.matteLayer.peelForceMax} onChange={(e) => handleMatteChange('peelForceMax', e.target.value)} className={`${inputClass} !mb-1 text-center`} placeholder="Max" />
+                                    <span className="block text-[10px] sm:text-xs text-center font-bold text-gray-400">Max</span>
+                                </div>
+                                <div>
+                                    <input type="number" step="0.01" value={formData.matteLayer.peelForceAvg} onChange={(e) => handleMatteChange('peelForceAvg', e.target.value)} className={`${inputClass} !mb-1 text-center`} placeholder="Avg" />
+                                    <span className="block text-[10px] sm:text-xs text-center font-bold text-gray-400">Avg</span>
+                                </div>
+                            </div>
 
                             {/* GU Values */}
                             <label className={labelClass}>광택 (GU)</label>
@@ -214,6 +234,9 @@ export default function ExperimentForm() {
 
                             <label className={labelClass}>인쇄 ICC 조건</label>
                             <input type="text" value={formData.topLayer.iccCondition} onChange={(e) => handleTopChange('iccCondition', e.target.value)} className={inputClass} placeholder="ICC 프로파일 등" />
+
+                            <label className={labelClass}>쉐이커 조건</label>
+                            <input type="text" value={formData.topLayer.shakerCondition} onChange={(e) => handleTopChange('shakerCondition', e.target.value)} className={inputClass} placeholder="쉐이커 조건 입력" />
 
                             <label className={labelClass}>전사 조건</label>
                             <div className="grid grid-cols-3 gap-2 mb-4">

@@ -29,10 +29,13 @@ export default function ExperimentList() {
         if (filterText) {
             result = result.filter(exp => {
                 const matchMemo = exp.memo && exp.memo.includes(filterText);
+                const matchMatteRecipe = exp.matteRecipe && exp.matteRecipe.some(r => r.materialName && r.materialName.includes(filterText));
+                const matchTopRecipe = exp.topRecipe && exp.topRecipe.some(r => r.materialName && r.materialName.includes(filterText));
+                // backward-compat with old single recipe
                 const matchRecipe = exp.recipe && exp.recipe.some(r => r.materialName && r.materialName.includes(filterText));
                 const matchBatch = (exp.matteLayer?.batchId && exp.matteLayer.batchId.includes(filterText)) ||
                     (exp.topLayer?.batchId && exp.topLayer.batchId.includes(filterText));
-                return matchMemo || matchRecipe || matchBatch;
+                return matchMemo || matchMatteRecipe || matchTopRecipe || matchRecipe || matchBatch;
             });
         }
         setFilteredData(result);
@@ -59,25 +62,33 @@ export default function ExperimentList() {
                 '비고/메모': exp.memo || '',
             };
 
-            // 1. Multiple Columns for Single Recipe
-            if (exp.recipe && exp.recipe.length > 0) {
-                exp.recipe.forEach((mat, idx) => {
-                    if (mat.materialName) {
-                        baseRow[`재료명_${idx + 1}`] = mat.materialName;
-                        baseRow[`투입량_${idx + 1}`] = mat.amount || '';
-                        baseRow[`비율_${idx + 1}`] = mat.ratio || '';
-                    }
-                });
-            }
+            // 무광 레시피
+            const matteRec = exp.matteRecipe || exp.recipe || [];
+            matteRec.forEach((mat, idx) => {
+                if (mat.materialName) {
+                    baseRow[`무광재료명_${idx + 1}`] = mat.materialName;
+                    baseRow[`무광투입량_${idx + 1}`] = mat.amount || '';
+                    baseRow[`무광비율_${idx + 1}`] = mat.ratio || '';
+                }
+            });
 
-            // 2. Matte Layer Evaluations
+            // TOP 레시피
+            const topRec = exp.topRecipe || [];
+            topRec.forEach((mat, idx) => {
+                if (mat.materialName) {
+                    baseRow[`TOP재료명_${idx + 1}`] = mat.materialName;
+                    baseRow[`TOP투입량_${idx + 1}`] = mat.amount || '';
+                    baseRow[`TOP비율_${idx + 1}`] = mat.ratio || '';
+                }
+            });
+
+            // Matte Layer
             const matte = exp.matteLayer || {};
             const matteEval = {
                 'M_Batch_ID': matte.batchId || '',
                 'M_레이어바': matte.layerBar || '',
                 'M_무광종류': matte.matteType || '',
                 'M_DRY조건': matte.dryCondition || '',
-                'M_쉐이커조건': matte.shakerCondition || '',
                 'M_도포량': matte.coatingAmount || '',
                 'M_코팅외관': matte.coatingAppearance || '',
                 'M_슬립성': matte.slipCondition || '',
@@ -85,18 +96,20 @@ export default function ExperimentList() {
                 'M_얼룩': matte.stain || '',
                 'M_이바리': matte.burr || '',
                 'M_파우더털림': matte.powderShedding || '',
-                'M_박리력': matte.peelForce || '',
-                'M_흡수성': matte.absorbency || '',
+                'M_박리력_Min': matte.peelForceMin || '',
+                'M_박리력_Max': matte.peelForceMax || '',
+                'M_박리력_Avg': matte.peelForceAvg || '',
                 'M_광택20º': matte.gloss20 || '',
                 'M_광택60º': matte.gloss60 || '',
                 'M_광택85º': matte.gloss85 || '',
             };
 
-            // 3. Top Layer Evaluations
+            // Top Layer
             const top = exp.topLayer || {};
             const topEval = {
                 'T_Batch_ID': top.batchId || '',
                 'T_ICC조건': top.iccCondition || '',
+                'T_쉐이커조건': top.shakerCondition || '',
                 'T_전사온도': top.transferTemp || '',
                 'T_전사시간': top.transferTime || '',
                 'T_전사압력': top.transferPressure || '',
@@ -179,12 +192,22 @@ export default function ExperimentList() {
                             </div>
 
                             {/* Recipe Summary */}
-                            <div className="bg-primary-50/50 dark:bg-primary-900/10 p-3 rounded-lg border border-primary-100 dark:border-primary-900/30 mb-3">
-                                <div className="flex items-center text-xs font-bold text-primary-700 dark:text-primary-300 mb-1">
-                                    <Package size={14} className="mr-1" /> 통합 레시피 ({exp.recipe?.filter(r => r.materialName).length || 0}종)
+                            <div className="flex space-x-2 mb-3">
+                                <div className="flex-1 bg-blue-50 dark:bg-blue-900/10 p-3 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                                    <div className="flex items-center text-xs font-bold text-blue-700 dark:text-blue-300 mb-1">
+                                        <Package size={12} className="mr-1" /> 무광 레시피 ({(exp.matteRecipe || exp.recipe || []).filter(r => r.materialName).length}종)
+                                    </div>
+                                    <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                                        {(exp.matteRecipe || exp.recipe || [])[0]?.materialName || '-'}
+                                    </div>
                                 </div>
-                                <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
-                                    {exp.recipe?.[0]?.materialName || '-'} {exp.recipe?.filter(r => r.materialName).length > 1 ? '외' : ''}
+                                <div className="flex-1 bg-orange-50 dark:bg-orange-900/10 p-3 rounded-lg border border-orange-100 dark:border-orange-900/30">
+                                    <div className="flex items-center text-xs font-bold text-orange-700 dark:text-orange-300 mb-1">
+                                        <Package size={12} className="mr-1" /> TOP 레시피 ({(exp.topRecipe || []).filter(r => r.materialName).length}종)
+                                    </div>
+                                    <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                                        {(exp.topRecipe || [])[0]?.materialName || '-'}
+                                    </div>
                                 </div>
                             </div>
 
